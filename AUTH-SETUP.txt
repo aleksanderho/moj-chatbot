@@ -1,0 +1,20 @@
+Konfiguracja lokalna
+1. W .env.local dopisz CHAT_PASSWORD= i wpisz po znaku = własne hasło warsztatowe.
+2. SESSION_SECRET został wygenerowany kryptograficznie (32 losowe bajty) i dopisany do .env.local bez odczytywania istniejących sekretów. Nie publikuj go ani nie dodawaj do NEXT_PUBLIC_*.
+3. Uruchom ponownie npm.cmd run dev. Wejdź na http://127.0.0.1:3000.
+
+Sesja: 8 godzin, podpis HMAC-SHA256, HttpOnly, SameSite=Strict, Secure w produkcji. Cookie zawiera czas wygaśnięcia i losowy identyfikator, bez hasła. Zmiana hasła lub sekretu unieważnia sesje. Wyjście usuwa cookie w przeglądarce. Sesje są bezstanowe: skopiowany wcześniej token pozostaje ważny do wygaśnięcia (lub zmiany hasła/sekretu).
+
+Lokalnie: 5 prób logowania łącznie / 15 minut w jednym procesie dev. Restart zeruje licznik. To nie jest globalna ochrona hostingu.
+
+Hosting produkcyjny: obecna implementacja wymaga Vercel Firewall. Bez niego logowanie jest blokowane (503). Nie ma trybu produkcyjnego z limitem wyłącznie w RAM.
+W Vercel ustaw CHAT_PASSWORD i osobny losowy SESSION_SECRET jako serwerowe zmienne środowiskowe.
+Firewall > Configure > New Rule: warunek @vercel/firewall, Rate Limit ID: chat-login, limit 5 żądań / 15 minut na IP, akcja blokowania / Rate Limit (nie Log). Zapisz i opublikuj regułę.
+Nie dodawaj dodatkowych filtrów, które wyłączają sprawdzenie części żądań. SDK używa domyślnego klucza IP; liczniki Vercel są regionalne i nie stanowią jednego ścisłego limitu dla całego świata. Brak reguły, błąd lub timeout blokuje logowanie. Konfigurację hostingu i reguły trzeba sprawdzić na wdrożeniu.
+Dokumentacja: https://vercel.com/docs/vercel-firewall/vercel-waf/rate-limiting-sdk
+
+Test automatyczny (wyłącznie losowe dane testowe, bez .env.local i bez wywołania modelu):
+node --conditions=react-server tests/auth.test.mjs
+npx.cmd tsc --noEmit
+
+Ręcznie w przeglądarce: błędne hasło, poprawne hasło, odświeżenie po zalogowaniu, Wyjdź i ponowne odświeżenie; po wyjściu ponownie ekran Wpisz hasło. Sprawdź limit prób na docelowym hostingu. Test odpowiedzi modelu wykonuje właściciel.
