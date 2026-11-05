@@ -9,7 +9,7 @@
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
-    "test": "node --conditions=react-server tests/auth.test.mjs"
+    "test": "node --conditions=react-server tests/auth.test.mjs && node --conditions=react-server tests/analysis.test.mjs"
   },
   "dependencies": {
     "@ai-sdk/react": "4.0.161",

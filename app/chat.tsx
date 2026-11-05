@@ -3,10 +3,12 @@
 import { useState, type FormEvent } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+import MessageAnalysis from "./analysis";
 
 const transport = new DefaultChatTransport({ api: "/api/chat" });
 
 export default function Chat() {
+  const [mode, setMode] = useState<"chat" | "analysis">("chat");
   const [message, setMessage] = useState("");
   const { messages, sendMessage, status, error, clearError } = useChat({ transport });
   const busy = status === "submitted" || status === "streaming";
@@ -38,6 +40,12 @@ export default function Chat() {
       <h1>Mój chatbot</h1>
       <button type="button" onClick={logout} disabled={leaving}>{leaving ? "Wychodzę…" : "Wyjdź"}</button>
       {logoutError && <p className="error" role="alert">{logoutError}</p>}
+      <nav className="mode-switch" aria-label="Tryb pracy">
+        <button type="button" aria-pressed={mode === "chat"} onClick={() => setMode("chat")}>Zwykły czat</button>
+        <button type="button" aria-pressed={mode === "analysis"} onClick={() => setMode("analysis")}>Analiza wiadomości</button>
+      </nav>
+      <div hidden={mode !== "analysis"}><MessageAnalysis /></div>
+      <div hidden={mode !== "chat"}>
       <section className="conversation" role="log" aria-label="Rozmowa" aria-live="polite">
         {messages.map((item) => (
           <p className={`message ${item.role === "assistant" ? "assistant" : ""}`} key={item.id}>
@@ -53,6 +61,7 @@ export default function Chat() {
         <input id="message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Napisz wiadomość…" autoComplete="off" disabled={busy} />
         <button type="submit" disabled={busy || !message.trim()}>Wyślij</button>
       </form>
+      </div>
     </main>
   );
 }
