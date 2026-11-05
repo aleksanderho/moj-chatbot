@@ -86,7 +86,14 @@ const secondMessage = await chat(req('chat', { messages: [
 ] }, cookie.split(';')[0]));
 assert.equal(secondMessage.status, 200);
 assert.match(await secondMessage.text(), /Odpowiedź testowa/);
-assert.equal(sentHistory.length, 3);
+assert.equal(sentHistory.length, 4);
+assert.equal(sentHistory[0].role, 'system');
+assert.match(sentHistory[0].content[0].text, /Jesteś asystentem Studio Nova/);
+assert.match(sentHistory[0].content[0].text, /45 minut.*150 zł brutto/);
+assert.match(sentHistory[0].content[0].text, /Przykłady oczekiwanego formatu i zachowania \(few-shot\)/);
+assert.equal((sentHistory[0].content[0].text.match(/Odpowiedź asystenta:/g) ?? []).length, 3);
+assert.deepEqual(sentHistory.slice(1).map((message) => message.role), ['user', 'assistant', 'user']);
+assert.equal(sentHistory[1].content, 'Mam na imię Ola.');
 assert.match(JSON.stringify(sentHistory), /Witaj, Olu/);
 const invalidHistory = await chat(req('chat', { messages: [
   { id: 'u1', role: 'user', parts: [{ type: 'step-start' }, { type: 'text', text: 'Test' }] },
